@@ -5,20 +5,30 @@ dossier_sortie=$2
 
 cd $1
 
-mkdir dossier_sortie
+mkdir $dossier_sortie
+mkdir $dossier_sortie/fastqc_reslts
+mkdir $dossier_sortie/amplican
+mkdir $dossier_sortie/prefix_amplican
+mkdir $dossier_sortie/full_length_amplican
+mkdir $dossier_sortie/non_chimer
+mkdir $dossier_sortie/cluster
+mkdir $dossier_sortie/fastq_mergepairs 
+mkdir $dossier_sortie/trimmed
 
-for file in ./fastq/*_R1.fastq.gz; do
+
+
+
+
+for file in ./fastq/*.fastq.gz; do
    gunzip $file
 done
 
-mkdir dossier_sortie/fastqc_reslts
+
 
 for file in ./fastq/*_R1.fastq; do
    R2=$(echo $file|sed  's/R1/R2/g')
    fastqc $file $R2 -o $2/fastqc_reslts
 done
-
-mkdir dossier_sortie/trimmed
 
 for file in ./fastq/*_R1.fastq; do
    R1=$(basename "$file")
@@ -27,8 +37,6 @@ for file in ./fastq/*_R1.fastq; do
    java -jar ./soft/AlienTrimmer.jar -if ./fastq/$R1 -ir ./fastq/$R2 -q 20 -c ./databases/contaminants.fasta -of $dossier_sortie/trimmed/$R1 -or $dossier_sortie/trimmed/$R2
 done
 
-
-mkdir dossier_sortie/fastq_mergepairs 
 
 for file in ./fastq/*_R1.fastq; do
 
@@ -49,35 +57,31 @@ cat $dossier_sortie/fastq_mergepairs/*.fasta > amplican.fasta
 
 sed -i "s/ //g" ./amplican.fasta
 
-mv amplican.fasta $dossier_sortie
-
-mv $dossier_sortie/amplican.fasta  
 
 vsearch --derep_fulllength amplican.fasta --output full_length_amplican.fasta --minuniquesize 10
 
-vsearch --derep_prefix amplican.fasta --output prefix_amplican.fasta --minuniquesize 10
 
-vsearch --uchime_denovo prefix_amplican.fasta --nonchimeras
+vsearch --derep_prefix amplican.fasta --output prefix_amplican.fasta --minuniquesize 10
+''
+
+vsearch --uchime_denovo prefix_amplican.fasta --nonchimeras non_chimer.fasta
+
 
 otu=">OTU_"
+
 
 vsearch --cluster_size non_chimer.fasta --id 0.97 --centroids cluster.fasta --relabel $otu
 
 
-
 vsearch --usearch_global cluster.fasta --db ./databases/mock_16S_18S.fasta --userout annotation --id 0.90 --top_hits_only --userfields "query+target"
+
 
 sed '1iOTU\tAnnotation' -i annotation
 
 
 #nettoyage : 
 
-mkdir $dossier_sortie/amplican
-mkdir $dossier_sortie/prefix_amplican
-mkdir $dossier_sortie/full_length_amplican
-mkdir $dossier_sortie/non_chimer
-mkdir $dossier_sortie/cluster
-mkdir 
+
 mv annotation $dossier_sortie/annotation
 
 for i in *.fasta;do
