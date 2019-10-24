@@ -3,7 +3,6 @@
 dossier_reads_bruts=$1
 dossier_sortie=$2
 
-#cd $1
 
 mkdir $dossier_sortie
 mkdir $dossier_sortie/fastqc_reslts
