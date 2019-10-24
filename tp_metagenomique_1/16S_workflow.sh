@@ -13,6 +13,7 @@ mkdir $dossier_sortie/non_chimer
 mkdir $dossier_sortie/cluster
 mkdir $dossier_sortie/fastq_mergepairs 
 mkdir $dossier_sortie/trimmed
+mkdir $dossier_sortie/annotation
 
 
 
